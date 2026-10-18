@@ -1,0 +1,33 @@
+# Render Blueprint: New > Blueprint > pick this repo. Render asks for the secret values on first deploy.
+services:
+  - type: web
+    name: graphmind-support
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.server:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/customers
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      # FalkorDB (Cloud): copy from app.falkordb.cloud
+      - key: FALKORDB_HOST
+        sync: false
+      - key: FALKORDB_PORT
+        sync: false
+      - key: FALKORDB_USERNAME
+        sync: false
+      - key: FALKORDB_PASSWORD
+        sync: false
+      - key: FALKORDB_GRAPH
+        value: support_memory
+      # Sarvam AI: speech and translation
+      - key: SARVAM_API_KEY
+        sync: false
+      # LLM that runs the agent; OPENAI_API_KEY is also used for embeddings
+      - key: LLM_PROVIDER
+        value: openai
+      - key: OPENAI_MODEL
+        value: gpt-4.1
+      - key: OPENAI_API_KEY
+        sync: false

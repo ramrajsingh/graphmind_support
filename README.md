@@ -58,6 +58,10 @@ Reset between demo runs. This clears tickets, calls and anything learned, and ke
 .venv/bin/python -m scripts.reset_demo
 ```
 
+## Deploy (Render, free tier)
+
+`render.yaml` is a Render Blueprint. In Render, choose **New → Blueprint**, pick this repo, and enter the secret values when asked: the `FALKORDB_*` settings, `SARVAM_API_KEY` and `OPENAI_API_KEY`. Render serves the app over HTTPS, which the browser needs for microphone access. Free instances sleep when idle, so open the URL a minute before a demo.
+
 ## Demo script (Rahul Verma, Hindi then English)
 
 1. **Call 1, Hindi:** "Mera Acme Pay app update ke baad login nahi ho raha hai." Asha opens a ticket linked to *Login fails after app update* and suggests clearing the cache.
