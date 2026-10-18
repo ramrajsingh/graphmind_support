@@ -1,5 +1,7 @@
 # GraphMind Support: a multilingual voice support agent with FalkorDB memory
 
+**Live demo: https://graphmind-support.onrender.com** (free instance; the first load can take up to a minute while it wakes)
+
 A voice support agent (Asha) whose memory is a FalkorDB graph. A customer reports a problem in Hindi, calls back the next day in Tamil or English, and Asha already knows the open ticket, which fixes failed, and which fix worked for other customers. Every answer can be traced to the Cypher that produced it.
 
 ## Hackathon submission: Graph Hacks, Context for AI Agents (WeMakeDevs × FalkorDB)
@@ -16,7 +18,7 @@ A voice support agent (Asha) whose memory is a FalkorDB graph. A customer report
 | Cypher queries | [`docs/cypher.md`](docs/cypher.md): every query the product runs, with indexes |
 | Demo video | [`docs/demo.mp4`](docs/demo.mp4) |
 | Write-up | [`docs/demo.pdf`](docs/demo.pdf) |
-| Live deployment | Render, from [`render.yaml`](render.yaml); the local setup below is complete |
+| Live deployment | **https://graphmind-support.onrender.com** (Render, from [`render.yaml`](render.yaml)) |
 
 ```
 browser mic ─► Sarvam Saaras STT ─► Sarvam Translate → English ─► LLM + memory tools ─► FalkorDB (Cypher)

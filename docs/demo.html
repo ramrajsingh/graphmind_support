@@ -42,7 +42,7 @@
 <body>
 
 <h1>GraphMind Support</h1>
-<div class="sub">A multilingual voice support agent whose memory is a FalkorDB graph. It remembers every customer, every fix, and how it reached each answer.</div>
+<div class="sub">A multilingual voice support agent whose memory is a FalkorDB graph. It remembers every customer, every fix, and how it reached each answer.<br><span style="font-size:10pt">Live: <b>graphmind-support.onrender.com</b> · Code: <b>github.com/ramrajsingh/graphmind_support</b></span></div>
 <div class="tags"><span>FalkorDB: primary memory</span><span>Track 02 · Agent Memory</span><span>Track 01 · Connected Data</span><span>Vector + multi-hop Cypher</span><span>Sarvam AI · 22 Indian languages</span><span>Explainable: Cypher per turn</span></div>
 
 <h2>The problem</h2>
@@ -135,7 +135,7 @@ RETURN k.name, score,
 cp .env.example .env                    # FalkorDB, Sarvam, OpenAI keys
 python -m scripts.setup_graph           # indexes + seed graph
 uvicorn app.server:app --port 8000      # open http://localhost:8000</pre>
-<p class="note">Repo: github.com/ramrajsingh/graphmind_support</p>
+<p class="note"><b>Live demo:</b> https://graphmind-support.onrender.com &nbsp;·&nbsp; <b>Repo:</b> github.com/ramrajsingh/graphmind_support</p>
 
 </body>
 </html>
