@@ -1,10 +1,22 @@
-# Asha: a multilingual voice support agent with FalkorDB memory
+# GraphMind Support: a multilingual voice support agent with FalkorDB memory
 
-A voice support agent whose memory is a FalkorDB graph. A customer reports a problem in Hindi, calls back the next day in Tamil or English, and Asha already knows the open ticket, which fixes failed, and which fix worked for other customers. Every answer can be traced to the Cypher that produced it.
+A voice support agent (Asha) whose memory is a FalkorDB graph. A customer reports a problem in Hindi, calls back the next day in Tamil or English, and Asha already knows the open ticket, which fixes failed, and which fix worked for other customers. Every answer can be traced to the Cypher that produced it.
 
-Built for **Graph Hacks: Context for AI Agents** (WeMakeDevs × FalkorDB):
-- **Track 02, Agent Memory:** episodic, semantic and procedural memory, isolated per customer.
-- **Track 01, Agents That Act on Connected Data:** multi-hop graph queries as tools, with explainable results.
+## Hackathon submission: Graph Hacks, Context for AI Agents (WeMakeDevs × FalkorDB)
+
+**Tracks entered:**
+- **Track 02, Agent Memory and Coordination (primary):** episodic, semantic and procedural memory in one FalkorDB graph, with memory kept separate per customer.
+- **Track 01, Agents That Act on Connected Data:** multi-hop Cypher traversals and vector search as agent tools, with every turn's Cypher shown to explain the answer.
+
+| Requirement | Where |
+|---|---|
+| Source code | This repository |
+| Setup instructions | [Setup](#setup) and [Deploy](#deploy-render-free-tier) |
+| Graph data model | [Memory in FalkorDB](#memory-in-falkordb) and [`app/schema.py`](app/schema.py) |
+| Cypher queries | [`docs/cypher.md`](docs/cypher.md): every query the product runs, with indexes |
+| Demo video | [`docs/demo.mp4`](docs/demo.mp4) |
+| Write-up | [`docs/demo.pdf`](docs/demo.pdf) |
+| Live deployment | Render, from [`render.yaml`](render.yaml); the local setup below is complete |
 
 ```
 browser mic ─► Sarvam Saaras STT ─► Sarvam Translate → English ─► LLM + memory tools ─► FalkorDB (Cypher)
