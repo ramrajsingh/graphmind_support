@@ -1,0 +1,9 @@
+anthropic>=1.0
+openai
+sarvamai
+fastapi
+uvicorn[standard]
+python-multipart
+httpx
+python-dotenv
+falkordb

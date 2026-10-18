@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Acme Voice Support</title>
+<script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+<style>
+  :root {
+    --bg: #f6f5f2; --panel: #ffffff; --ink: #1d1d1f; --muted: #6b6b70; --line: #e4e2dc;
+    --accent: #0f766e; --accent-ink: #ffffff; --agent: #eef6f5; --caller: #f3f0ff; --warn: #b45309;
+    --hl: #f59e0b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141416; --panel: #1d1d20; --ink: #ececee; --muted: #9a9aa2; --line: #2e2e33;
+      --accent: #2dd4bf; --accent-ink: #0b1f1d; --agent: #17302d; --caller: #26213d; --warn: #f59e0b;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--ink); }
+  header { padding: 14px 20px; border-bottom: 1px solid var(--line); display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  header h1 { font-size: 17px; margin: 0 12px 0 0; }
+  select, button, input { font: inherit; color: inherit; }
+  select, input[type=text] { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; }
+  button { border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 7px 14px; cursor: pointer; }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  button:disabled { opacity: .45; cursor: default; }
+  main { display: grid; grid-template-columns: minmax(320px, 1fr) minmax(320px, 1.2fr); gap: 16px; padding: 16px; height: calc(100vh - 62px); }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; display: flex; flex-direction: column; min-height: 0; }
+  .panel h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 0; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+  #transcript { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .msg { max-width: 85%; padding: 9px 12px; border-radius: 12px; }
+  .msg.agent { background: var(--agent); align-self: flex-start; }
+  .msg.caller { background: var(--caller); align-self: flex-end; }
+  .msg .en { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .msg .lang { font-size: 11px; color: var(--muted); text-transform: uppercase; }
+  .controls { padding: 12px; border-top: 1px solid var(--line); display: flex; gap: 8px; align-items: center; }
+  #talk { flex: 0 0 auto; width: 140px; height: 44px; font-weight: 600; }
+  #talk.rec { background: #dc2626; border-color: #dc2626; color: #fff; }
+  #textIn { flex: 1; min-width: 0; }
+  #status { font-size: 13px; color: var(--muted); padding: 0 14px 10px; min-height: 1.4em; }
+  #graph { flex: 1; min-height: 260px; }
+  .side { display: grid; grid-template-rows: 1fr auto; gap: 16px; min-height: 0; }
+  #trace { max-height: 34vh; overflow-y: auto; padding: 10px 14px; font-size: 13px; }
+  #trace .t { border-left: 3px solid var(--accent); padding: 4px 8px; margin-bottom: 8px; }
+  #trace .t.err { border-color: var(--warn); }
+  #trace code { font-size: 12px; color: var(--muted); white-space: pre-wrap; word-break: break-word; }
+  .legend { display: flex; gap: 10px; flex-wrap: wrap; padding: 8px 14px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); }
+  .legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; background: var(--c); }
+  @media (max-width: 800px) {
+    main { grid-template-columns: 1fr; height: auto; padding: 16px; }
+    #transcript { min-height: 50vh; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Acme Voice Support</h1>
+  <label>Caller <select id="customer"></select></label>
+  <button id="start" class="primary">Start call</button>
+  <button id="end" disabled>Hang up</button>
+</header>
+<main>
+  <section class="panel">
+    <h2>Call</h2>
+    <div id="transcript"></div>
+    <div id="status">Pick a caller and start a call.</div>
+    <div class="controls">
+      <button id="talk" disabled>Hold to talk</button>
+      <input id="textIn" type="text" placeholder="…or type in any language" disabled>
+      <button id="send" disabled>Send</button>
+    </div>
+  </section>
+  <div class="side">
+    <section class="panel">
+      <h2>Memory graph (FalkorDB) · highlighted = used this turn</h2>
+      <div id="graph"></div>
+      <div class="legend" id="legend"></div>
+    </section>
+    <section class="panel">
+      <h2>Agent memory calls &amp; Cypher</h2>
+      <div id="trace"><em style="color:var(--muted)">Tool calls appear here.</em></div>
+    </section>
+  </div>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const COLORS = { customer: "#6366f1", product: "#0ea5e9", ticket: "#ef4444", knownissue: "#a855f7", troubleshootingstep: "#10b981" };
+const LABELS = { customer: "Customer", product: "Product", ticket: "Ticket", knownissue: "Known issue", troubleshootingstep: "Step" };
+$("legend").innerHTML = Object.entries(LABELS).map(([k, v]) => `<span style="--c:${COLORS[k]}">${v}</span>`).join("");
+
+let callId = null, recorder = null, chunks = [], player = new Audio();
+const nodes = new vis.DataSet(), edges = new vis.DataSet();
+const network = new vis.Network($("graph"), { nodes, edges }, {
+  nodes: { shape: "dot", size: 14, font: { size: 12, color: getComputedStyle(document.body).color } },
+  edges: { arrows: "to", font: { size: 9, align: "middle", color: "#888", strokeWidth: 0 }, color: { color: "#9ca3af" }, smooth: { type: "continuous" } },
+  physics: { stabilization: { iterations: 150 }, barnesHut: { springLength: 120 } },
+});
+
+function mergeGraph(g) {
+  if (!g) return;
+  nodes.forEach((n) => nodes.update({ id: n.id, borderWidth: 1, size: 14 }));
+  edges.forEach((e) => edges.update({ id: e.id, width: 1, color: { color: "#9ca3af" } }));
+  for (const n of g.nodes) {
+    const c = COLORS[(n.type || "").toLowerCase()] || "#64748b";
+    nodes.update({ id: n.id, label: n.name.length > 34 ? n.name.slice(0, 32) + "…" : n.name, title: `${n.type}: ${n.name}`,
+      color: { background: c, border: n.highlight ? "#f59e0b" : c }, borderWidth: n.highlight ? 4 : 1, size: n.highlight ? 20 : 14 });
+  }
+  for (const e of g.edges) {
+    const id = `${e.source}|${e.type}|${e.target}`;
+    edges.update({ id, from: e.source, to: e.target, label: e.type, width: e.highlight ? 3 : 1,
+      color: { color: e.highlight ? "#f59e0b" : "#9ca3af" } });
+  }
+}
+
+function addMsg(who, text, en, lang) {
+  const d = document.createElement("div");
+  d.className = `msg ${who}`;
+  d.innerHTML = `<div class="lang">${who === "agent" ? "Asha" : "Caller"} · ${lang || ""}</div><div></div>` + (en && en !== text ? `<div class="en"></div>` : "");
+  d.children[1].textContent = text;
+  if (d.children[2]) d.children[2].textContent = en;
+  $("transcript").appendChild(d);
+  $("transcript").scrollTop = 1e9;
+}
+
+function showTrace(tools, timing, queries) {
+  const el = $("trace");
+  if (tools && tools.length) {
+    el.innerHTML = tools.map((t) => `<div class="t ${t.error ? "err" : ""}"><b>${t.tool}</b> <code>${esc(JSON.stringify(t.input))}</code><br><code>${esc(JSON.stringify(t.error || t.output).slice(0, 600))}</code></div>`).join("");
+  } else {
+    el.innerHTML = `<em style="color:var(--muted)">No tool calls this turn; answered from preloaded memory.</em>`;
+  }
+  // The exact Cypher behind this turn: how the agent reached its answer.
+  if (queries && queries.length) {
+    el.insertAdjacentHTML("beforeend", `<div style="color:var(--muted);margin:10px 0 6px">FalkorDB Cypher this turn (${queries.length})</div>` +
+      queries.map((q) => `<details class="t"><summary><b>${esc(q.label)}</b> · ${q.ms}ms</summary><code>${esc(q.cypher)}</code></details>`).join(""));
+  }
+  if (timing) el.insertAdjacentHTML("afterbegin", `<div style="color:var(--muted);margin-bottom:8px">⏱ ${Object.entries(timing).map(([k, v]) => `${k} ${v}ms`).join(" · ")}</div>`);
+}
+const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+// Replies arrive as one mp3 chunk per sentence; play them back to back.
+let queue = [];
+function play(chunks) {
+  queue = [...(chunks || [])];
+  playNext();
+}
+function playNext() {
+  if (!queue.length) return;
+  player.src = "data:audio/mpeg;base64," + queue.shift();
+  player.play().catch(() => {});
+}
+player.addEventListener("ended", playNext);
+
+function setInCall(on) {
+  $("start").disabled = on; $("customer").disabled = on; $("end").disabled = !on;
+  $("talk").disabled = !on; $("textIn").disabled = !on; $("send").disabled = !on;
+}
+
+async function api(path, opts) {
+  const r = await fetch(path, opts);
+  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || r.statusText);
+  return r.json();
+}
+
+async function loadCustomers() {
+  const list = await api("/api/customers");
+  $("customer").innerHTML = list.map((c) => `<option value="${c.customer_id}">${c.name} (${c.preferred_language})</option>`).join("");
+}
+
+$("start").onclick = async () => {
+  $("status").textContent = "Connecting and loading memory…";
+  try {
+    const r = await api("/api/call/start", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ customer_id: $("customer").value }) });
+    callId = r.call_id;
+    $("transcript").innerHTML = "";
+    nodes.clear(); edges.clear();
+    mergeGraph(r.graph);
+    addMsg("agent", r.reply, r.reply_en, r.spoken_language);
+    showTrace([], r.timing_ms, r.queries);
+    play(r.audio_chunks);
+    setInCall(true);
+    const open = (r.memory.tickets || []).filter((t) => t.status !== "resolved").length;
+    $("status").textContent = `Connected. Memory: ${r.memory.products.length} products, ${open} open ticket(s). Hold the button and speak.`;
+  } catch (e) { $("status").textContent = "Error: " + e.message; }
+};
+
+$("end").onclick = async () => {
+  const id = callId;
+  callId = null; setInCall(false); queue = []; player.pause();
+  $("status").textContent = "Call ended. Saving the call summary to memory…";
+  const r = id ? await api(`/api/call/${id}/end`, { method: "POST" }).catch(() => ({})) : {};
+  $("status").textContent = r.summary ? `Saved to memory: "${r.summary}" Start a new call to see what the agent remembers.`
+                                      : "Call ended. Start a new call to see what the agent remembers.";
+};
+
+async function sendTurn(form) {
+  $("status").textContent = "Thinking…";
+  $("talk").disabled = $("send").disabled = true;
+  try {
+    const r = await api(`/api/call/${callId}/turn`, { method: "POST", body: form });
+    if (!r.heard) { $("status").textContent = "Didn't catch that, try again."; return; }
+    addMsg("caller", r.heard, r.heard_en, r.language);
+    addMsg("agent", r.reply, r.reply_en, r.spoken_language);
+    mergeGraph(r.graph);
+    showTrace(r.tools, r.timing_ms, r.queries);
+    play([...(r.caller_audio_chunks || []), ...r.audio_chunks]);  // typed caller line, then Asha
+    $("status").textContent = "Your turn.";
+  } catch (e) { $("status").textContent = "Error: " + e.message; }
+  finally { $("talk").disabled = $("send").disabled = !callId; }
+}
+
+$("send").onclick = () => {
+  const t = $("textIn").value.trim();
+  if (!t) return;
+  $("textIn").value = "";
+  const f = new FormData(); f.append("text", t); sendTurn(f);
+};
+$("textIn").onkeydown = (e) => { if (e.key === "Enter") $("send").click(); };
+
+async function startRec() {
+  if (!callId || recorder) return;
+  queue = []; player.pause();
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  const mime = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"].find((m) => MediaRecorder.isTypeSupported(m)) || "";
+  recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+  chunks = [];
+  recorder.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+  recorder.onstop = () => {
+    stream.getTracks().forEach((t) => t.stop());
+    const type = recorder.mimeType || "audio/webm";
+    const blob = new Blob(chunks, { type });
+    recorder = null;
+    $("talk").classList.remove("rec"); $("talk").textContent = "Hold to talk";
+    if (blob.size < 2000) { $("status").textContent = "Too short, hold the button while you speak."; return; }
+    const f = new FormData(); f.append("audio", blob, type.includes("mp4") ? "turn.mp4" : "turn.webm"); sendTurn(f);
+  };
+  recorder.start();
+  $("talk").classList.add("rec"); $("talk").textContent = "Listening… release";
+  $("status").textContent = "Listening — speak in any Indian language.";
+}
+const stopRec = () => recorder && recorder.state === "recording" && recorder.stop();
+$("talk").addEventListener("pointerdown", (e) => { e.preventDefault(); startRec().catch((err) => ($("status").textContent = "Mic error: " + err.message)); });
+$("talk").addEventListener("pointerup", stopRec);
+$("talk").addEventListener("pointerleave", stopRec);
+
+loadCustomers().catch((e) => ($("status").textContent = "Server error: " + e.message));
+</script>
+</body>
+</html>

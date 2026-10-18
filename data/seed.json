@@ -1,0 +1,173 @@
+{
+  "products": [
+    {
+      "name": "Acme Pay app",
+      "category": "mobile app",
+      "current_version": "4.2"
+    },
+    {
+      "name": "Acme Fiber broadband",
+      "category": "internet service",
+      "current_version": ""
+    },
+    {
+      "name": "Acme Smart Router",
+      "category": "hardware",
+      "current_version": "fw 2.8"
+    }
+  ],
+  "steps": [
+    {
+      "name": "Clear app cache",
+      "instructions": "Settings > Apps > Acme Pay > Storage > Clear cache, then reopen the app."
+    },
+    {
+      "name": "Update app to latest version",
+      "instructions": "Open the Play Store or App Store and install the latest Acme Pay update."
+    },
+    {
+      "name": "Re-link 2FA device",
+      "instructions": "On acme.example/security, remove the old 2FA device, then scan the new QR code in the app."
+    },
+    {
+      "name": "Reset password",
+      "instructions": "Tap 'Forgot password' on the login screen and follow the OTP link."
+    },
+    {
+      "name": "Reinstall app",
+      "instructions": "Uninstall Acme Pay, restart the phone, and install it again."
+    },
+    {
+      "name": "Restart router",
+      "instructions": "Unplug the router for 30 seconds, plug it back in, and wait for the light to turn solid green."
+    },
+    {
+      "name": "Switch Wi-Fi to 5 GHz band",
+      "instructions": "Connect to the network ending in -5G instead of the 2.4 GHz one."
+    },
+    {
+      "name": "Update router firmware",
+      "instructions": "Open 192.168.1.1 > System > Firmware > Check for updates."
+    },
+    {
+      "name": "Check fiber cable connection",
+      "instructions": "Make sure the green fiber cable clicks firmly into the ONT box."
+    },
+    {
+      "name": "Re-verify UPI PIN",
+      "instructions": "In Acme Pay, go to Bank accounts > Reset UPI PIN and verify with your debit card."
+    }
+  ],
+  "known_issues": [
+    {
+      "name": "Login fails after app update",
+      "product": "Acme Pay app",
+      "symptoms": "Cannot log in after updating to 4.2; error 'session invalid' or OTP never accepted",
+      "resolved_by": [
+        "Clear app cache",
+        "Update app to latest version",
+        "Re-link 2FA device"
+      ]
+    },
+    {
+      "name": "Forgot password",
+      "product": "Acme Pay app",
+      "symptoms": "Customer doesn't remember the password",
+      "resolved_by": [
+        "Reset password"
+      ]
+    },
+    {
+      "name": "App crashes on launch",
+      "product": "Acme Pay app",
+      "symptoms": "App closes immediately when opened",
+      "resolved_by": [
+        "Clear app cache",
+        "Reinstall app"
+      ]
+    },
+    {
+      "name": "UPI payment fails",
+      "product": "Acme Pay app",
+      "symptoms": "Payment stuck or fails with 'transaction declined'",
+      "resolved_by": [
+        "Re-verify UPI PIN",
+        "Update app to latest version"
+      ]
+    },
+    {
+      "name": "Slow internet speed",
+      "product": "Acme Fiber broadband",
+      "symptoms": "Speeds much lower than plan, buffering",
+      "resolved_by": [
+        "Restart router",
+        "Switch Wi-Fi to 5 GHz band",
+        "Update router firmware"
+      ]
+    },
+    {
+      "name": "No internet connection",
+      "product": "Acme Fiber broadband",
+      "symptoms": "Red LOS light, no connectivity at all",
+      "resolved_by": [
+        "Check fiber cable connection",
+        "Restart router"
+      ]
+    },
+    {
+      "name": "Wi-Fi keeps dropping",
+      "product": "Acme Smart Router",
+      "symptoms": "Devices disconnect from Wi-Fi every few minutes",
+      "resolved_by": [
+        "Update router firmware",
+        "Switch Wi-Fi to 5 GHz band"
+      ]
+    }
+  ],
+  "customers": [
+    {
+      "customer_id": "cust-priya",
+      "name": "Priya Sharma",
+      "phone": "+91-98000-00001",
+      "preferred_language": "hi-IN",
+      "owns": [
+        "Acme Pay app",
+        "Acme Fiber broadband"
+      ],
+      "gender": "female"
+    },
+    {
+      "customer_id": "cust-rahul",
+      "name": "Rahul Verma",
+      "phone": "+91-98000-00004",
+      "preferred_language": "hi-IN",
+      "gender": "male",
+      "owns": [
+        "Acme Pay app",
+        "Acme Smart Router"
+      ]
+    },
+    {
+      "customer_id": "cust-karthik",
+      "name": "Karthik Raman",
+      "phone": "+91-98000-00002",
+      "preferred_language": "ta-IN",
+      "owns": [
+        "Acme Pay app",
+        "Acme Smart Router"
+      ],
+      "gender": "male"
+    },
+    {
+      "customer_id": "cust-ananya",
+      "name": "Ananya Das",
+      "phone": "+91-98000-00003",
+      "preferred_language": "bn-IN",
+      "owns": [
+        "Acme Fiber broadband",
+        "Acme Smart Router"
+      ],
+      "gender": "female"
+    }
+  ]
+}
