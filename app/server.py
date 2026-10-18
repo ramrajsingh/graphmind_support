@@ -24,7 +24,7 @@ log = logging.getLogger("support")
 ROOT = Path(__file__).resolve().parent.parent
 SEED = json.loads((ROOT / "data" / "seed.json").read_text())
 
-app = FastAPI(title="GraphMind Support")
+app = FastAPI(title="Pick Up Where We Left Off")
 app.mount("/static", StaticFiles(directory=ROOT / "static"), name="static")
 
 db = GraphDB()
