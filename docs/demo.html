@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>GraphMind Support</title>
+<style>
+  @page { size: A4; margin: 13mm 14mm; }
+  * { box-sizing: border-box; }
+  body { font: 10.3pt/1.45 -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; color: #1c1c22; margin: 0; }
+  h1 { font-size: 25pt; margin: 0 0 2px; letter-spacing: -.01em; }
+  h2 { font-size: 13.5pt; margin: 16px 0 6px; color: #b4231e; border-bottom: 1.5px solid #f3d6d4; padding-bottom: 3px; }
+  h3 { font-size: 10.8pt; margin: 8px 0 4px; }
+  p { margin: 4px 0 6px; }
+  .sub { font-size: 12pt; color: #555; margin-bottom: 9px; }
+  .tags span { display: inline-block; background: #fdf0ef; color: #b4231e; border-radius: 10px; padding: 1px 9px; margin: 0 4px 4px 0; font-size: 8.8pt; font-weight: 600; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .card { border: 1px solid #e7e3e1; border-radius: 8px; padding: 8px 11px; background: #fcfbfa; }
+  .card h3 { margin-top: 0; }
+  pre { font: 8.4pt/1.4 ui-monospace, Menlo, monospace; background: #f5f2f0; border-radius: 6px; padding: 7px 10px; margin: 4px 0; white-space: pre-wrap; }
+  code { font: 8.8pt ui-monospace, Menlo, monospace; }
+  table { border-collapse: collapse; width: 100%; font-size: 9.3pt; margin: 4px 0; }
+  th, td { text-align: left; padding: 4px 6px; border-bottom: 1px solid #ebe7e4; vertical-align: top; }
+  th { background: #f5f2f0; }
+  .flow { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; font-size: 8.8pt; margin: 6px 0; }
+  .flow b { background: #b4231e; color: #fff; border-radius: 6px; padding: 4px 7px; font-weight: 600; }
+  .flow b.g { background: #1c1c22; }
+  .flow i { font-style: normal; color: #888; }
+  .say { margin: 3px 0; padding: 5px 9px; border-radius: 8px; font-size: 9.3pt; }
+  .c { background: #f1efff; margin-left: 36px; }
+  .a { background: #fdf0ef; margin-right: 36px; }
+  .say small { display: block; color: #666; font-size: 8.4pt; }
+  .note { font-size: 9pt; color: #555; }
+  .kpi { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 6px 0; }
+  .kpi div { border: 1px solid #e7e3e1; border-radius: 8px; padding: 6px 8px; text-align: center; }
+  .kpi b { display: block; font-size: 15pt; color: #b4231e; }
+  .kpi span { font-size: 8.5pt; color: #555; }
+  .page { page-break-before: always; }
+  ul { margin: 4px 0 6px 18px; padding: 0; }
+  li { margin: 2px 0; }
+</style>
+</head>
+<body>
+
+<h1>GraphMind Support</h1>
+<div class="sub">A multilingual voice support agent whose memory is a FalkorDB graph. It remembers every customer, every fix, and how it reached each answer.</div>
+<div class="tags"><span>FalkorDB: primary memory</span><span>Track 02 · Agent Memory</span><span>Track 01 · Connected Data</span><span>Vector + multi-hop Cypher</span><span>Sarvam AI · 22 Indian languages</span><span>Explainable: Cypher per turn</span></div>
+
+<h2>The problem</h2>
+<p>A customer calls back: “My account still isn't working.” Most support bots start from zero. They ask the customer to explain again, suggest the fix that already failed, and forget that the customer spoke Hindi yesterday and English today. The answer depends on <b>how things relate</b>: this customer, this ticket, the steps already tried, and the fixes that worked for others with the same problem.</p>
+
+<h2>What we built</h2>
+<p><b>Asha</b> is a voice agent that uses FalkorDB as its context layer. On every call she loads the customer's subgraph: products, tickets, steps tried, and summaries of earlier calls. She matches new problems to known issues with vector search, and gets the next fix with a multi-hop traversal: <i>known issue → ranked fixes, minus what this ticket already tried</i>. When a fix works, she writes it back as shared knowledge, so the next customer benefits in any language.</p>
+
+<div class="flow">
+  <b class="g">🎙 Caller · any language</b><i>→</i><b class="g">Sarvam Saaras v4 STT</b><i>→</i><b class="g">Translate → English</b><i>→</i><b>LLM + 5 memory tools</b><i>⇄</i><b>FalkorDB · Cypher</b><i>→</i><b class="g">Translate → caller's language</b><i>→</i><b class="g">Bulbul v4 TTS 🔊</b>
+</div>
+
+<h2>Memory model in FalkorDB</h2>
+<table>
+<tr><th style="width:17%">Memory</th><th style="width:48%">Graph</th><th>What it's for</th></tr>
+<tr><td><b>Semantic</b><br><small>shared, learned</small></td><td><code>(:KnownIssue)-[:RESOLVED_BY {rank}]->(:TroubleshootingStep)</code><br><code>(:KnownIssue)-[:AFFECTS]->(:Product)</code><br>vector index on <code>KnownIssue.embedding</code></td><td>Match a new problem to a known issue (cosine distance &lt; 0.5) and its proven fixes, in order</td></tr>
+<tr><td><b>Customer state</b><br><small>per customer</small></td><td><code>(:Customer)-[:OPENED]->(:Ticket)-[:MATCHES]->(:KnownIssue)</code><br><code>(:Ticket)-[:TRIED | RESOLVED_WITH]->(:TroubleshootingStep)</code></td><td>What was tried, what's left, contacts and priority</td></tr>
+<tr><td><b>Episodic</b></td><td><code>(:Customer)-[:HAD_CALL]->(:Conversation {summary})-[:HAS_MESSAGE]->(:Message)</code><br><code>(:Conversation)-[:DISCUSSED]->(:Ticket)</code></td><td>Each call's messages, original language and an LLM summary, read back at the next call</td></tr>
+<tr><td><b>Procedural</b></td><td>Agent playbook</td><td>One step at a time, never repeat a <code>TRIED</code> step, escalate when no fixes are left, raise priority on repeat contact</td></tr>
+</table>
+
+<div class="grid2">
+  <div class="card">
+    <h3>Multi-hop: the next fix for a callback</h3>
+<pre>MATCH (c:Customer {customer_id:$cid})-[:OPENED]->(t:Ticket)
+OPTIONAL MATCH (t)-[:MATCHES]->(k:KnownIssue)
+OPTIONAL MATCH (t)-[:TRIED]->(f:TroubleshootingStep)
+WITH t, k, collect(f.name) AS tried
+OPTIONAL MATCH (k)-[rb:RESOLVED_BY]->(s)
+WHERE NOT (t)-[:TRIED]->(s)
+WITH t, k, tried, s ORDER BY rb.rank
+RETURN t.id, k.name, tried, collect(s.name) AS untried</pre>
+    <p class="note">Preloaded at call start, so a callback is answered with <b>no extra tool round trip</b> (31 ms query).</p>
+  </div>
+  <div class="card">
+    <h3>Vector search + traversal: a new problem</h3>
+<pre>CALL db.idx.vector.queryNodes('KnownIssue','embedding',6,
+     vecf32($vec)) YIELD node AS k, score
+WITH k, score WHERE score &lt; 0.5
+OPTIONAL MATCH (k)-[:AFFECTS]->(p:Product)
+WITH k, score, p WHERE p.key = $product
+MATCH (k)-[rb:RESOLVED_BY]->(s:TroubleshootingStep)
+OPTIONAL MATCH (:Ticket {id:$tid})-[tr:TRIED]->(s)
+RETURN k.name, score,
+  collect({step:s.name, tried: count(tr) > 0})</pre>
+    <p class="note">Unrelated problems (“router LED blinking orange”) correctly match nothing, which triggers learning.</p>
+  </div>
+</div>
+
+<div class="page"></div>
+<h2>Learning loop: memory that improves</h2>
+<p>When a caller confirms a fix worked, Asha adds a <code>RESOLVED_WITH</code> link on the ticket and promotes the fix to shared knowledge: a <code>RESOLVED_BY {learned:true}</code> link on the matched known issue, or a <b>new embedded KnownIssue</b> created from the ticket. Tested live:</p>
+<ol style="margin:4px 0 6px 18px;padding:0">
+  <li><b>Rahul (Hindi)</b>: “Mera router ka light orange blink kar raha hai.” No known issue matches. A ticket is opened. A factory reset fixes it, so a new KnownIssue is created with that fix.</li>
+  <li><b>Ananya (Bengali)</b>: “আমার Acme Smart Router এর আলো কমলা রঙে জ্বলছে-নিভছে” (different words, different language). Vector search finds Rahul's learned issue, and Asha suggests the factory reset first.</li>
+</ol>
+
+<h2>Explainable by design</h2>
+<p>Every turn returns the exact Cypher it ran and how long each query took. The UI shows them under <i>Agent memory calls &amp; Cypher</i>, next to a live graph view where the nodes and edges used in the answer are highlighted. Judges can see why Asha suggested a step: which known issue matched, which steps were excluded as <code>TRIED</code>, and in what rank order the rest came.</p>
+
+<h2>Sarvam multilingual layer</h2>
+<div class="grid2">
+  <div class="card"><h3>Hear and understand</h3><p><b>Saaras v4</b> transcribes 22 Indian languages plus English, including mixed speech like Hinglish, with language detection and keyterms (“Acme Pay”, “2FA”). <b>Sarvam Translate</b> turns each turn into English, so <b>one language-neutral graph</b> serves every language: a ticket opened in Hindi is continued in Tamil or English.</p></div>
+  <div class="card"><h3>Speak naturally</h3><p>Replies are translated back in classic-colloquial style, keeping tech terms in English, and spoken by <b>Bulbul v4</b> with a persona voice per language. Typed caller lines are read aloud in a male or female caller voice, so a typed demo sounds like a two-person call. <code>preferred_language</code> on the Customer node sets the greeting language.</p></div>
+</div>
+
+<h2>Live demo transcript (real run)</h2>
+<h3>Call 1: Rahul, Hindi</h3>
+<div class="say c">Mera Acme Pay app update ke baad login nahi ho raha hai.<small>“My Acme Pay app won't log in since the update”</small></div>
+<div class="say a">🔧 <code>start_new_issue</code>: vector match <i>Login fails after app update</i>, ticket opened (85 ms + 29 ms)<br>Rahul, चलिए Acme Pay का app cache clear करते हैं…<small>“Let's start by clearing the app cache…”</small></div>
+<div class="say c">Cache clear kar diya, phir bhi login nahi ho raha. <small>→ 🔧 record_step: <code>(:Ticket)-[:TRIED]->(Clear app cache)</code></small></div>
+<div class="say c">App bhi update kar liya, abhi bhi nahi chal raha. Main baad mein call karta hoon.<small>→ TRIED (Update app) · hang up → call summary saved on the <code>:Conversation</code> node</small></div>
+<h3>Call 2: next day, English</h3>
+<div class="say c">Hi, my account still isn't working.</div>
+<div class="say a">🔧 <code>update_ticket(repeat_contact)</code>: contacts 2, priority <b>high</b><br>“Let's try re-linking your 2FA device…”<small>The untried fix came from the preloaded traversal. No re-explaining and no repeated steps.</small></div>
+<div class="say c">Yes, I re-linked the 2FA device and now I can log in. Thank you!<small>→ RESOLVED_WITH · ticket resolved · fix confirmed in shared memory</small></div>
+
+<h2>Performance (FalkorDB Cloud)</h2>
+<div class="kpi">
+  <div><b>28–160 ms</b><span>per Cypher query</span></div>
+  <div><b>~2.3 s</b><span>agent step on a callback</span></div>
+  <div><b>~5 s</b><span>full callback turn, speech in → speech out</span></div>
+  <div><b>0</b><span>repeated steps across calls</span></div>
+</div>
+<p class="note">Speedups: the customer subgraph is preloaded in one traversal, new issues use one combined tool, independent tool calls run in parallel, messages are logged in the background, and Bulbul synthesizes each sentence in parallel.</p>
+
+<h2>Stack and setup</h2>
+<p><b>FalkorDB</b> (Cloud or Docker; vector, full-text and range indexes) · <b>Sarvam AI</b> (Saaras v4, Translate, Bulbul v4) · <b>OpenAI GPT-4.1</b> (or Claude) with tool use · text-embedding-3-small · FastAPI · vis-network UI.</p>
+<pre>uv venv &amp;&amp; uv pip install -r requirements.txt
+cp .env.example .env                    # FalkorDB, Sarvam, OpenAI keys
+python -m scripts.setup_graph           # indexes + seed graph
+uvicorn app.server:app --port 8000      # open http://localhost:8000</pre>
+<p class="note">Repo: github.com/ramrajsingh/graphmind_support</p>
+
+</body>
+</html>
